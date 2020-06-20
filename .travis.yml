@@ -1,0 +1,21 @@
+sudo: required
+services:
+  - docker
+
+before_install;
+  - docker build -t peterotoya/react-test -f ./client/Dockerfile.dev ./client
+
+script:
+  - docker run -e CI=true peterotoya/react-test npm test
+
+after_success:
+  - docker build -t peterotoya/multi-client ./client
+  - docker build -t peterotoya/multi-nginx ./nginx
+  - docker build -t peterotoya/multi-server ./server
+  - docker build -t peterotoya/multi-worker ./worker
+  # Log in to the docker cli
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+  - docker push peterotoya/multi-client
+  - docker push peterotoya/multi-nginx
+  - docker push peterotoya/multi-server
+  - docker push peterotoya/multi-worker
